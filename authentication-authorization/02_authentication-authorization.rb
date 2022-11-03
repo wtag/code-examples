@@ -12,14 +12,16 @@ class Base
   desc 'Fetch all blog posts'
   route_setting :authentication, optional: 'Everyone is allowed to read blog posts'
   get 'posts' do
-    Authorization.new(current_user).list_posts?
-    # logic to return blog posts
+    authorization = Authorization.new(current_user)
+    error!(status: 403) unless authorization.list_posts?
+    authorization.list_posts
   end
 
   desc 'Fetch all users'
   get 'users' do
-    Authorization.new(current_user).list_users?
-    # logic to return users
+    authorization = Authorization.new(current_user)
+    error!(status: 403) unless authorization.list_users?
+    authorization.list_users
   end
 
   desc 'Update user'
@@ -30,7 +32,7 @@ class Base
   put 'user/:id' do
     user = User.find(params[:id])
     Authorization.new(current_user).modify_user?(user, params)
-    # logic to return users
+    # logic to update the user
   end
 end
 
@@ -50,12 +52,26 @@ class Authorization
     true
   end
 
-  def list_current_users?
+  def list_posts
+    if @current_user.present?
+      # list all posts for logged in users
+      BlogPosts.all
+    else
+      # otherwise only the published ones
+      where(published: true)
+    end
+  end
+
+  def list_users?
     # allowed for logged in users
     @current_user.present?
   end
 
-  def modify_current_user?(user, params)
+  def list_users
+    User.all
+  end
+
+  def modify_user?(user, params)
     # always allowed for super admins
     return true if @current_user.super_admin?
 
