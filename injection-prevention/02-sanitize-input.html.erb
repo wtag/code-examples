@@ -1,0 +1,19 @@
+<!--
+ Bad:
+  Allows an attacker to create a comment with
+    <script>code.toSteal(sessionCookie)</script>
+  Every browser will happily run it...
+-->
+<body>
+  <div><%= @comment.body %></div>
+</body>
+
+
+<!--
+Good:
+  Sanitize the user input
+
+Why don't we do it when adding it to the database?
+  Allows improving sanitization more easily later on (e.g. it was too strict, it wasn't too strict)
+-->
+ <div><%= sanitize @comment.body %></div>
